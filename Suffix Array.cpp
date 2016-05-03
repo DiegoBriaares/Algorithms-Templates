@@ -2,10 +2,12 @@
 using namespace std;
 #define MAX 100002
 int suffix[MAX];
+char base[MAX];
+int n;
 int cmp(pair<int,char *>a,pair<int,char *>b){
 	return strcmp(a.second,b.second)<0?1:0;
 }
-void tree(char *base,int n){
+void tree(){
 	pair<int,char *>v[MAX];
 	for(int i=0;i<n;i++){
 		v[i].first=i;
@@ -19,8 +21,8 @@ void tree(char *base,int n){
 	int main (){
 		ios_base::sync_with_stdio(0);
 		cin.tie(0);
-		char *arr;
-		cin>>arr;
-		tree(arr,strlen(arr));
-		for(int i=0;i<strlen(arr);i++)cout << suffix[i]<<"\n";
+		cin>>base;
+		n=strlen(base);
+		tree();
+		for(int i=0;i<n;i++)cout << suffix[i]<<"\n";
 	}
