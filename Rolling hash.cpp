@@ -1,72 +1,40 @@
-/*
- * C++ Program to Implement Rolling Hash
- */
-#include <iostream>
-#include <string>
+#include <bits/stdc++.h>
 using namespace std;
- 
-const unsigned PRIME_BASE = 257;
-const unsigned PRIME_MOD = 1000000007;
- 
-/*
- * Hash Function
- */
-unsigned hash(string s)
-{
-    long long ret = 0;
-    for (int i = 0; i < s.size(); i++)
-    {
-        ret = ret * PRIME_BASE + s[i];
-        ret %= PRIME_MOD;
-    }
-    return ret;
+#define MOD 1000000007
+#define P 9001
+#define ll long long 
+int hash(string v){
+	ll r=0;
+	for(int i=0;i<v.size();i++){
+		r*=P;
+		r+=(ll)(v[i]);
+		r%=MOD;
+	}
+	return r;
 }
- 
-/*
- * Rabin-Karp (Rolling Hash Implementation)
- */
-int rabin_karp(string needle,string haystack)
-{
-    long long hash1 = hash(needle);
-    long long hash2 = 0;
-    long long power = 1;
-    for (int i = 0; i < needle.size(); i++)
-        power = (power * PRIME_BASE) % PRIME_MOD;
- 
-    for (int i = 0; i < haystack.size(); i++)
-    {
-        hash2 = hash2*PRIME_BASE + haystack[i];
-        hash2 %= PRIME_MOD;
- 
-    	if (i >= needle.size())
-    	{
-            hash2 -= power * haystack[i-needle.size()] % PRIME_MOD;
-            if (hash2 < 0)
-                hash2 += PRIME_MOD;
-        }
-    	if (i >= needle.size()-1 && hash1 == hash2)
-            return i - (needle.size()-1);
-    }
- 
-    return -1;
+int roll(string query,string base){
+	ll hash1=hash(query),hash2=0,pot=1;
+	for(int i=0;i<query.size();i++){
+		pot=(pot*P)%MOD;
+	}
+	for(int i=0;i<base.size();i++){
+		hash2*=P;
+		hash2+=base[i];
+		hash2%=MOD;
+		if(hash2<0)hash2+=MOD;
+		if(i>=query.size()){
+			hash2-=pot*base[i-query.size()]%MOD;
+			if(hash2<0)hash2+=MOD;
+		}
+		if(i>=query.size()-1&&hash1==hash2)return i-(query.size()-1);
+	}
+	return -1;
 }
- 
-/*
- * Main Contains Menu
- */
-int main()
-{
-    cout<<"---------------------------"<<endl;
-    cout<<"Rolling Hash Implementation"<<endl;
-    cout<<"---------------------------"<<endl;
-    string s1,s2;
-    cout<<"Enter Original String: ";
-    getline(cin,s1);
-    cout<<"Enter String to find: ";
-    cin>>s2;
-    if(rabin_karp(s2, s1) == -1)
-        cout<<"String not found"<<endl;
-    else
-        cout<<"String "<<s2<<"found at position "<<rabin_karp(s2, s1)<<endl;
-        return 0;
-}
+	int main (){
+		ios_base::sync_with_stdio(0);
+		cin.tie(0);
+		string a,b;
+		cin>>a>>b;
+		int r=roll(b,a);
+		(r!=-1?cout << "Encontrado en: "<<r<<"\n":cout <<"No encontrado\n");
+	}
