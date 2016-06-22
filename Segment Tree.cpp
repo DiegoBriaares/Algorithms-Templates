@@ -18,11 +18,11 @@ void build(int lo,int hi,int n){
 	ST[n]=min(ST[left],ST[right]);
 }
 int query(int qlo,int qhi,int lo,int hi,int n){
-	if(qlo<=lo&&qh>=hi){
+	if(qlo<=lo&&qh>=hi){  //Total Overlap
 		return ST[n];
 	}
-	if(qlo>hi||qhi<lo)
-		return (1<<30); //el return es infinito
+	if(qlo>hi||qhi<lo) return (1<<30);  //No Overlap
+	//Partial Overlap
 		int mid=(lo+hi)/2;
 		int left=n*2+1;
 		int right=n*2+2;
