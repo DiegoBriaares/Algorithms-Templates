@@ -1,85 +1,220 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// Definiciones iniciales.
+// Factores primos de un numero a.
 
-typedef long long Long;
-typedef vector<double> Vector;
-typedef vector<Vector> Matriz;
+typedef pair<int, int> Factor;
 
-const double ERROR = 1e-9;
-const double M_2PI = 2 * M_PI;
+vector<Factor> FactoresPrimos(int a) {
+	int conteo = 0;
+	vector<Factor> factores;
+	while (!(a & 1)) ++conteo, a >>= 1;
+	if (conteo) factores.push_back(
+		Factor(2, conteo)), conteo = 0;
 
-// Tolerancia en flotantes.
-
-bool Igual(double a, double b) {
-    return fabs(a - b) < ERROR;
+	int raiz = sqrt(a);
+	for (int i = 3; i <= raiz; i += 2) {
+		while (!(a % i)) ++conteo, a /= i;
+		if (conteo) factores.push_back(
+			Factor(i, conteo)), conteo = 0;
+	}
+	if (a > 1) factores.push_back(
+		Factor(a, 1));
+	return factores;
 }
 
-// Realiza eliminacion Gaussiana en una matriz.
+// Criba de Eratostenes de 1 a n.
 
-void EliminaGaussiana(Matriz& m) {
-    for (int i = 0; i < m.size(); ++i) {
-        int fila_mayor = i;
-        for (int j = i + 1; j < m.size(); ++j)
-            if (fabs(m[fila_mayor][i]) <
-                fabs(m[j][i])) fila_mayor = j;
-        swap(m[i], m[fila_mayor]);
-        if (Igual(m[i][i], 0)) continue;
-        for (int j = m[i].size() - 1; j >= i; --j)
-            m[i][j] /= m[i][i];
-        for (int j = 0; j < m.size(); ++j) {
-            if (i == j || Igual(m[j][i], 0)) continue;
-            double ratio = m[j][i] / m[i][i];
-            for (int k = i; k < m[j].size(); ++k)
-                m[j][k] -= m[i][k] * ratio;
-        }
-    }
+vector<int> Criba(int n) {
+	int raiz = sqrt(n); vector<int> criba(n + 1);
+	for (int i = 4; i <= n; i += 2) criba[i] = 2;
+	for (int i = 3; i <= raiz; i += 2) if (!criba[i])
+		for (int j = i * i; j <= n; j += i)
+			if (!criba[j]) criba[j] = i;
+	return criba;
+}
+
+// Factores primos de n factorial (n!).
+// El vector de primos debe estar ordenado.
+
+vector<Factor> FactoresFactorial(
+	int n, const vector<int>& primos) {
+
+	vector<Factor> factores;
+	for (int i = 0; i < primos.size(); ++i) {
+		if (n < primos[i]) break; int p = primos[i];
+		int reps = n / p; while (primos[i] <= n / p)
+			p *= primos[i], reps += n / p;
+		factores.push_back(Factor(primos[i], reps));
+	}
+	return factores;
 }
 
 // Exponenciacion binaria a^n mod m.
 
+typedef long long Long;
+
 Long Exponenciar(Long a, Long n, Long m) {
-    Long res = 1, p = a;
+    Long resultado = 1;
     for (; n; n >>= 1) {
-        if (n & 1) res =
-            (res * p) % m;
-        p = (p * p) % m;
+        if (n & 1) resultado =
+            (resultado * a) % m;
+        a = (a * a) % m;
     }
-    return res;
+    return resultado;
 }
 
 // Multiplicacion binaria a*b mod m.
 
 Long Multiplicar(Long a, Long b, Long m) {
-    Long res = 0, p = a;
+    Long resultado = 0;
     for (; b; b >>= 1) {
-        if (b & 1) res =
-            (res + p) % m;
-        p = (p + p) % m;
+        if (b & 1) resultado =
+            (resultado + a) % m;
+        a = (a + a) % m;
     }
-    return res;
+    return resultado;
 }
 
-// Tipo de dato para operar con numeros complejos.
+// Algoritmo de Euclides extendido entre a y b.
+// Además de devolver el gcd(a, b), resuelve la
+// identidad de Bezout con el par (x, y). Si el
+// parametro mod no es especificado, se resuelve
+// con aritmetica normal; si mod se especifica,
+// la identidad se resuelve modulo mod.
+
+Long Euclides(Long a, Long b,
+    Long& x, Long& y, Long mod = 0) {
+    if (!b) { x = 1, y = 0; return a; }
+    Long gcd = Euclides(b, a % b, x, y, mod);
+
+    x = !mod? x - y * (a / b): (mod +
+    	x - (y * (a / b)) % mod) % mod;
+    swap(x, y); return gcd;
+}
+
+// Tipo de dato para operar fracciones.
+
+struct Fraccion {
+	Long num, den;
+	Fraccion() : num(0), den(1) {}
+	Fraccion(Long n, Long d) {
+		if (d < 0) n = -n, d = -d;
+		Long gcd = __gcd(abs(n), abs(d));
+		num = n / gcd, den = d / gcd;
+	}
+
+	Fraccion operator-() const {
+		return Fraccion(-num, den);
+	}
+
+	Fraccion operator+(const Fraccion& f) {
+		Long gcd = __gcd(den, f.den);
+		return Fraccion(
+			num * (f.den / gcd) +
+			f.num * (den / gcd),
+			den * (f.den / gcd)
+		);
+	}
+
+	Fraccion operator-(const Fraccion& f) {
+		return *this + -f; // a - b = a + (-b)
+	}
+
+	Fraccion operator*(const Fraccion& f) {
+		return Fraccion(num * f.num, den * f.den);
+	}
+
+	Fraccion operator/(const Fraccion& f) {
+		return Fraccion(num * f.den, den * f.num);
+	}
+
+	bool operator<(const Fraccion& cmp) {
+		Long gcd = __gcd(den, cmp.den);
+		return num * (cmp.den / gcd) <
+			   cmp.num * (den / gcd);
+	}
+
+	bool operator==(const Fraccion& cmp) {
+		Long gcd = __gcd(den, cmp.den);
+		return num * (cmp.den / gcd) ==
+			   cmp.num * (den / gcd);
+	}
+};
+
+// Eliminacion Gaussiana de matrices.
+// Definiciones iniciales para Gauss-Jordan.
+
+typedef vector<double> Vector;
+typedef vector<Vector> Matriz;
+
+// Para eliminacion con fracciones.
+
+Fraccion fabs(const Fraccion& f) {
+	return Fraccion(abs(f.num), f.den);
+}
+
+bool EsCero(const Fraccion& f) {
+	return f.num == 0;
+}
+
+// Para eliminacion con flotantes.
+
+const double ERROR = 1e-9;
+
+bool EsCero(double a) {
+    return fabs(a) < ERROR;
+}
+
+// En caso de no permitir el pivoteo (eg. cuando
+// requieran sacar una matriz inversa) simplemente
+// comenten o borren la seccion <comment>.
+
+void EliminacionGaussiana(Matriz& m) {
+    for (int i = 0; i < m.size(); ++i) {
+    	// <comment>
+        int fila_mayor = i;
+        for (int j = i + 1; j < m.size(); ++j)
+            if (fabs(m[fila_mayor][i]) <
+                fabs(m[j][i])) fila_mayor = j;
+        swap(m[i], m[fila_mayor]);
+        // </comment>
+
+        if (EsCero(m[i][i])) continue;
+        for (int j = m[i].size() - 1; j >= i; --j)
+            m[i][j] = m[i][j] / m[i][i];
+        for (int j = 0; j < m.size(); ++j) {
+            if (i == j || EsCero(m[j][i])) continue;
+            for (int k = m[j].size() - 1; k >= i; --k)
+                m[j][k] = m[j][k] - m[i][k] * m[j][i];
+        }
+    }
+}
+
+// Tipo de dato para operar numeros complejos.
 
 struct Complejo {
     double real, imag;
     Complejo() : real(), imag() {}
-    Complejo(double R, double I) : real(R), imag(I) {}
+    Complejo(double r, double i) : real(r), imag(i) {}
 
     Complejo operator+(const Complejo& c) {
-        return Complejo(real + c.real, imag + c.imag); }
+        return Complejo(real + c.real, imag + c.imag);
+    }
     Complejo operator-(const Complejo& c) {
-        return Complejo(real - c.real, imag - c.imag); }
+        return Complejo(real - c.real, imag - c.imag);
+    }
     Complejo operator*(const Complejo& c) {
         return Complejo(real * c.real - imag * c.imag,
-                        real * c.imag + imag * c.real); }
+                        real * c.imag + imag * c.real);
+    }
 };
 
 // Transformada rapida de Fourier.
 // Se tiene que garantizar que el numero de
 // elementos en el vector sea una potencia de 2.
+
+const double M_2PI = 2 * M_PI;
 
 vector<Complejo> FastAndFourier(
     const vector<Complejo>& a, int k = 1) {
