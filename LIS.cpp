@@ -1,59 +1,32 @@
-#include<bits/stdc++.h>
-using namespace std;
- 
-// Returns the length and the LCIS of two
-// arrays arr1[0..n-1] and arr2[0..m-1]
-int LCIS(int arr1[], int n, int arr2[], int m)
+#include<stdio.h>
+#include<string.h>
+void lis(int str[],int n)
 {
-    // table[j] is going to store length of LCIS
-    // ending with arr2[j]. We initialize it as 0,
-    int table[m];
-    for (int j=0; j<m; j++)
-        table[j] = 0;
+	int len[n],prev[n],i,j,max=-1,k,b[n],a=0;
+	for(i=0;i<n;i++){
+		len[i]=1;
+		prev[i]=-1;
+	}
+	for(i=1;i<n;i++)
+	for(j=0;j<i;j++){
+		if(str[i]>str[j]&& len[i]<(len[j]+1)){
+			len[i]=len[j]+1;
+			prev[i]=j;
  
-    // Traverse all elements of arr1[]
-    for (int i=0; i<n; i++)
-    {
-        // Initialize current length of LCIS
-        int current = 0;
- 
-        // For each element of arr1[], trvarse all
-        // elements of arr2[].
-        for (int j=0; j<m; j++)
-        {
-            // If both the array have same elements.
-            // Note that we don't break the loop here.
-            if (arr1[i] == arr2[j])
-                if (current + 1 > table[j])
-                    table[j] = current + 1;
- 
-            /* Now seek for previous smaller common
-               element for current element of arr1 */
-            if (arr1[i] > arr2[j])
-                if (table[j] > current)
-                    current = table[j];
-        }
-    }
- 
-    // The maximum value in table[] is out result
-    int result = 0;
-    for (int i=0; i<m; i++)
-        if (table[i] > result)
-           result = table[i];
- 
-    return result;
+		}
+	}
+	for(i=0;i<n;i++)
+		if(len[i]>max)
+		{	max=len[i]; k=i;}
+	b[a]=str[k];
+	for(i=prev[k];i>=0;i=prev[k])
+		{b[++a]=str[i];k=i;}
+	for(i=max-1;i>=0;i--)
+		printf("%d ",b[i]);
 }
- 
-/* Driver program to test above function */
-int main()
+main()
 {
-    int arr1[] = {3, 4, 9, 1};
-    int arr2[] = {5, 3, 8, 9, 10, 2, 1};
- 
-    int n = sizeof(arr1)/sizeof(arr1[0]);
-    int m = sizeof(arr2)/sizeof(arr2[0]);
- 
-    cout << "Length of LCIS is "
-         << LCIS(arr1, n, arr2, m);
-    return (0);
+    int str[]={5,9,4};
+    lis(str,sizeof(str)/4);
+    return 0;
 }
