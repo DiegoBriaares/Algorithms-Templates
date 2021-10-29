@@ -1,48 +1,79 @@
+/**
+
+   * Made by:    Diego Briaares
+   * At:   29.10.2021 15:20:06
+**/
+
 #include <bits/stdc++.h>
 using namespace std;
-#define MAX 202
+
+
+void optimize() {
+	ios_base::sync_with_stdio(0);
+	cin.tie(0);
+}
+
+const int INF = (int) 1e9;
+
+const int MAX = (int) 1e5;
+
 int A[MAX];
-int ST[MAX];
-int tamn;
-int tamst;
-void build(int lo,int hi,int n){
-	if(lo==hi){
-		ST[n]=A[lo];
+
+int ST[4 * MAX];
+
+void build(int l, int r, int node) {
+	if (l == r) {
+		ST[node] = A[l];
 		return;
 	}
-	int mid=(lo+hi)/2;
-	int left=n*2+1;
-	int right=n*2+2;
-	build(lo,mid,left);
-	build(mid+1,hi,right);
-	ST[n]=min(ST[left],ST[right]);
+	if (l > r) return;
+	int mid = (l + r) / 2;
+	int left = node * 2 + 1;
+	int right = node * 2 + 2;
+	build(l, mid, left);
+	build(mid + 1, r, right);
+	ST[node] = min(ST[left], ST[right]);
 }
-int query(int qlo,int qhi,int lo,int hi,int n){
-	if(qlo<=lo&&qh>=hi){  //Total Overlap
-		return ST[n];
+
+void update(int l, int r, int node, int i, int v) {
+	if (l > r || l > i || r < i) return;
+	if (i <= l && r <= i) {
+		ST[node] = v;
+		return;
 	}
-	if(qlo>hi||qhi<lo) return (1<<30);  //No Overlap
-	//Partial Overlap
-		int mid=(lo+hi)/2;
-		int left=n*2+1;
-		int right=n*2+2;
-		return min(query(qlo,qhi,lo,mid,left),query(qlo,qhi,mid+1,hi,right));
+	int mid = (l + r) / 2;
+	int left = node * 2 + 1;
+	int right = node * 2 + 2;
+	update(l, mid, left, i, v);
+	update(mid + 1, r, right, i, v);
+	ST[node] = min(ST[left], ST[right]);
 }
-void update(int i,int val){
-	ST[tamst-tamn+i]=val; //actualiza hoja
-	int n=tamst-tamn+i;
-	while(n!=0){ //Mientras no sea raíz
-		n=(n-1)/2; //padre
-		int left=n*2+1;
-		int right=n*2+2;
-		ST[n]=min(ST[left],ST[right]);
-	}
+
+int query(int l, int r, int node, int ql, int qr) {
+	if (l > r || l > qr || r < ql) return INF;
+	if (ql <= l && r <= qr) return ST[node];
+	int mid = (l + r) / 2;
+	int left = node * 2 + 1;
+	int right = node * 2 + 2;
+	return min(query(l, mid, left, ql, qr), query(mid + 1, r, right, ql, qr));
 }
-	int main (){
-		ios_base::sync_with_stdio(0);
-		cin.tie(0);
-		cin>>tamn;
-		tamst=tamn*2-1; //SI TAMN NO ES POTENCIA DE 2, HAGAMOSLO POTENCIA, Y RELLENEMOS LOS SIGUEINTES DE LA POTENCIA CON IFINITO
-		build(0,tamn,0);
-		query(a,b,0,tamn-1,0);
+
+	int main () {
+		optimize();
+		int n, q;
+		cin >> n >> q;
+		for (int i = 0; i < n; i++) cin >> A[i];
+		build(0, n - 1, 0);
+		while (q--) {
+			int op, a, b;
+			cin >> op >> a >> b;
+			a--;
+			if (op == 1){
+				update(0, n - 1, 0, a, b);
+			}
+			else {
+				b--;
+				cout << query(0, n - 1, 0, a, b) << "\n";
+			}
+		}
 	}
