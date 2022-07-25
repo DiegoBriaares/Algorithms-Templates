@@ -1,7 +1,7 @@
 /**
 
    * author:    Diego Briaares
-   * At:   25.07.2022 01:52:27
+   * At:   25.07.2022 01:56:53
 **/
 
 #include <bits/stdc++.h>
@@ -12,7 +12,7 @@ void optimize() {
 	cin.tie(0);
 }
 
-// Randal
+ // Randal..
 
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
@@ -21,9 +21,11 @@ struct node {
 	node* R;
 	int key, pry;
 	int sz;
+	int swp;
+	int id;
 };
 
-const int MAXNODES = 200002;
+const int MAXNODES = 1000002;
 node treap[MAXNODES];
 int nodes;
 
@@ -34,7 +36,21 @@ int size(node* T) {
 	return T->sz;
 }
 
+void Push(node* &T) {
+	swap(T->L, T->R);
+	if (T->L) {
+		T->L->swp ^= 1;
+	}
+	if (T->R) {
+		T->R->swp ^= 1;
+	}
+	T->swp = 0;
+}
+
 void Merge(node* &T, node* A, node* B) {
+	if (T && T->swp) {
+		Push(T);
+	}	
 	if (A == NULL) {
 		T = B;
 		return;
@@ -42,6 +58,12 @@ void Merge(node* &T, node* A, node* B) {
 	if (B == NULL) {
 		T = A;
 		return;
+	}
+	if (A->swp) {
+		Push(A);
+	}
+	if (B->swp) {
+		Push(B);
 	}
 
 	if (A->pry >= B->pry) {
@@ -61,17 +83,20 @@ void Split(node* T, int k, node* &A, node* &B) {
 		A = B = NULL;
 		return;
 	}
+	if (T->swp) {
+		Push(T);
+	}
+	T->key = size(T->L) + 1;
 	if (T->key > k) {
 		Split(T->L, k, A, T->L);
 		B = T;
 		B->sz = (size(B->L) + size(B->R) + 1);
 	}
 	else {
-		Split(T->R, k, T->R, B);
+		Split(T->R, k - T->key, T->R, B);
 		A = T;
 		A->sz = (size(A->L) + size(A->R) + 1);
 	}
-	return;
 }
 
 node* new_node(int v = 0) {
@@ -81,92 +106,28 @@ node* new_node(int v = 0) {
 	}
 	node* NewT = &treap[nodes++];
 	NewT->sz = 1;
+	NewT->swp = 0;
+	NewT->id = v;
 	NewT->L = NULL;
 	NewT->R = NULL;
-	NewT->key = v;
 	NewT->pry = uniform_int_distribution<int>(0, MAXNODES * 10)(rng);
 	return NewT; 
 }
 
-bool Find(node* T, int v) {
-	if (T == NULL) {
-		return false;
-	}
-	else if (T->key == v) {
-		return true;
-	}
-	else if (T->key < v) {
-		return Find(T->R, v);
-	}
-	else {
-		return Find(T->L, v);
-	}
-}
-
-/* - */
 vector<int> inorder(node* T) {
 	if (T == NULL) {
 		return vector<int>();
 	}
+	if (T->swp) {
+		Push(T);
+	}
 	vector<int> order;
 	vector<int> L = inorder(T->L);
 	order.insert(order.end(), L.begin(), L.end());
-	order.push_back(T->key);
+	order.push_back(T->id);
 	vector<int> R = inorder(T->R);
 	order.insert(order.end(), R.begin(), R.end());
 	return order;
-} /* -- */
-
-
-// No debe haber un v
-void Insert(node* &T, int v = 0) {
-	node* T1;
-	node* T2;
-	Split(T, v, T1, T2);
-	Merge(T1, T1, new_node(v));
-	Merge(T, T1, T2);
-	return;
-}
-
-
-// Debe haber un v 
-void Erase(node* &T, int v) {
-	node* T1;
-	node* T2;
-	node* T3;
-	Split(T, v, T1, T2);
-	Split(T1, v - 1, T1, T3);
-	Merge(T, T1, T2);
-	return;
-}
-
-
-// Debe haber un k-esimo elemento
-int OrdK(node* &T, int k) {
-	if (T == NULL) {
-		return 420;
-	}
-	if (size(T->L) + 1 == k) {
-		return T->key;
-	}
-	if (size(T->L)  + 1 < k) {
-		return OrdK(T->R, k - size(T->L) - 1);
-	}
-	else {
-		return OrdK(T->L, k);
-	}
-}
-
-int Count(node* &T, int x) {
-	if (T == NULL) {
-		return 0;
-	}
-	node* T1;
-	node* T2;
-	Split(T, x, T1, T2);
-	int amt = size(T1);
-	Merge(T, T1, T2);
-	return amt;
 }
 
 

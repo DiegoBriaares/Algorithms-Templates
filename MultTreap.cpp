@@ -1,7 +1,7 @@
 /**
 
    * author:    Diego Briaares
-   * At:   25.07.2022 01:52:27
+   * At:   25.07.2022 01:53:09
 **/
 
 #include <bits/stdc++.h>
@@ -16,14 +16,18 @@ void optimize() {
 
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
+// Multiset Treap(cnt = 1), 
+	//Insert(v) if v not in Treap already
+	// Upd(v) otherwise
 struct node {
 	node* L;
 	node* R;
 	int key, pry;
 	int sz;
+	int cnt;
 };
 
-const int MAXNODES = 200002;
+const int MAXNODES = 100002;
 node treap[MAXNODES];
 int nodes;
 
@@ -52,7 +56,7 @@ void Merge(node* &T, node* A, node* B) {
 		Merge(B->L, A, B->L);
 		T = B;
 	}
-	T->sz = (size(T->L) + size(T->R) + 1);
+	T->sz = (size(T->L) + size(T->R) + T->cnt);
 	return;
 }
 
@@ -64,12 +68,12 @@ void Split(node* T, int k, node* &A, node* &B) {
 	if (T->key > k) {
 		Split(T->L, k, A, T->L);
 		B = T;
-		B->sz = (size(B->L) + size(B->R) + 1);
+		B->sz = (size(B->L) + size(B->R) + B->cnt);
 	}
 	else {
 		Split(T->R, k, T->R, B);
 		A = T;
-		A->sz = (size(A->L) + size(A->R) + 1);
+		A->sz = (size(A->L) + size(A->R) + A->cnt);
 	}
 	return;
 }
@@ -81,6 +85,7 @@ node* new_node(int v = 0) {
 	}
 	node* NewT = &treap[nodes++];
 	NewT->sz = 1;
+	NewT->cnt = 1;
 	NewT->L = NULL;
 	NewT->R = NULL;
 	NewT->key = v;
@@ -146,11 +151,11 @@ int OrdK(node* &T, int k) {
 	if (T == NULL) {
 		return 420;
 	}
-	if (size(T->L) + 1 == k) {
+	if (size(T->L) < k && size(T->L) + T->cnt >= k) {
 		return T->key;
 	}
-	if (size(T->L)  + 1 < k) {
-		return OrdK(T->R, k - size(T->L) - 1);
+	if (size(T->L) + T->cnt < k) {
+		return OrdK(T->R, k - size(T->L) - T->cnt);
 	}
 	else {
 		return OrdK(T->L, k);
@@ -169,6 +174,22 @@ int Count(node* &T, int x) {
 	return amt;
 }
 
+// Si ya v esta en el Treap puedes "meterlo" por aqui
+void Upd(node* &T, int v) {
+	if (T == NULL) {
+		return;
+	}
+	if (T->key == v) {
+		T->cnt++;
+	}
+	else if (T->key < v) {
+		Upd(T->R, v);
+	}
+	else {
+		Upd(T->L, v);
+	}
+	T->sz = size(T->L) + size(T->R) + T->cnt;
+}
 
 	int main () {
 		optimize();
