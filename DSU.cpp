@@ -70,7 +70,7 @@ int main () {
   std::vector<DSU::Set> Sets;
   Sets.reserve(n);
   for (int i = 0; i < n; i++) {
-    Sets.emplace_back(DSU::Set(i));
+    Sets.emplace_back(i);
 
   }
   int Q;
